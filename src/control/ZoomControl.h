@@ -17,7 +17,6 @@
 #include <vector>
 
 //Hardcode max and min zoom
-//TODO:this should probably be user-adjustable in future
 #define DEFAULT_ZOOM_MAX 5
 #define DEFAULT_ZOOM_MIN 0.3
 #define DEFAULT_ZOOM_STEP 0.1
@@ -58,7 +57,6 @@ public:
 
 	void initZoomHandler(GtkWidget* widget);
 
-	// TODO: Naming and getter / setter!
 	// Current zoom center
 	double getZoomCenterX();
 	void setZoomCenterX(double zoomCenterX);
