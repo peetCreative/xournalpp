@@ -16,12 +16,28 @@
 #include <gtk/gtk.h>
 #include <vector>
 
-//Hardcode max and min zoom
-//this should probably be user-adjustable in future
-#define MAX_ZOOM 5
-#define MIN_ZOOM 0.3
+#define DEFAULT_ZOOM_MAX 5
+#define DEFAULT_ZOOM_MIN 0.3
+#define DEFAULT_ZOOM_STEP 0.05
+#define MIN_ZOOM_STEP 0.05
+#define ZOOM_EPSILON 0.0001
 
 class XournalView;
+
+enum ZoomModeType
+{
+	ZOOM_MODE_NONE,
+	ZOOM_MODE_GESTURE,
+	ZOOM_MODE_IN_BUTTON,
+	ZOOM_MODE_OUT_BUTTON,
+	ZOOM_MODE_SLIDER,
+	ZOOM_MODE_CTRL_SCROLL,
+	ZOOM_MODE_FIT,
+	ZOOM_MODE_100,
+	ZOOM_MODE_INIT
+};
+
+
 class ZoomListener
 {
 public:
@@ -37,8 +53,8 @@ public:
 	ZoomControl();
 	virtual ~ZoomControl();
 
-	void zoomIn();
-	void zoomOut();
+	void zoomIn(bool ctrl_scroll);
+	void zoomOut(bool ctrl_scroll);
 
 	void zoomFit();
 	void zoom100();
@@ -58,9 +74,23 @@ public:
 
 	void setCurrentPage(size_t currentPage);
 
-	// Current zoom center
-	gdouble zoom_center_x;
-	gdouble zoom_center_y;
+	double getZoomCenterX();
+	void setZoomCenterX(double zoomCenterX);
+
+	double getZoomCenterY();
+	void setZoomCenterY(double zoomCenterY);
+
+	double getZoomStep();
+	void setZoomStep(double zoomStep);
+
+	double getZoomMax();
+	void setZoomMax(double zoomMax);
+
+	double getZoomMin();
+	void setZoomMin(double zoomMin);
+
+	ZoomModeType getCurZoomMode();
+	void setCurZoomMode(ZoomModeType);
 
 protected:
 	void fireZoomChanged(double lastZoom);
@@ -79,10 +109,17 @@ private:
 
 	double lastZoomValue;
 
-	bool zoomFitMode;
-
 	double zoom100Value;
 	double zoomFitValue;
 
 	size_t currentPage;
+
+	double zoomCenterX;
+	double zoomCenterY;
+
+	double zoomStep;
+	double zoomMax;
+	double zoomMin;
+
+	ZoomModeType curZoomMode;
 };

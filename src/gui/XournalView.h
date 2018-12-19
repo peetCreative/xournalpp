@@ -38,8 +38,6 @@ public:
 	virtual ~XournalView();
 
 public:
-	void zoomIn();
-	void zoomOut();
 	void setZoom(gdouble scale);
 
 	bool paint(GtkWidget* widget, GdkEventExpose* event);
@@ -135,8 +133,6 @@ public:
 	bool onKeyPressEvent(GdkEventKey* event);
 	bool onKeyReleaseEvent(GdkEventKey* event);
 
-	// TODO Private!, Naming conventions!
-	bool zoom_gesture_active;
 	static void onRealized(GtkWidget* widget, XournalView* view);
 
 	static void zoom_gesture_begin_cb(GtkGesture* gesture,GdkEventSequence* sequence,XournalView* view);

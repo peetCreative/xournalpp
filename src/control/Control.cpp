@@ -1550,10 +1550,10 @@ void Control::zoomCallback(ActionType type)
 		zoomFit();
 		break;
 	case ACTION_ZOOM_IN:
-		zoom->zoomIn();
+		zoom->zoomIn(false);
 		break;
 	case ACTION_ZOOM_OUT:
-		zoom->zoomOut();
+		zoom->zoomOut(false);
 		break;
 	default:
 		break;
@@ -2173,7 +2173,9 @@ bool Control::loadMetadataCallback(MetadataCallbackData* data)
 	}
 
 	data->ctrl->scrollHandler->scrollToPage(data->md.page);
+	data->ctrl->zoom->setCurZoomMode(ZOOM_MODE_INIT);
 	data->ctrl->zoom->setZoom(data->md.zoom);
+	data->ctrl->zoom->setCurZoomMode(ZOOM_MODE_NONE);
 
 	delete data;
 

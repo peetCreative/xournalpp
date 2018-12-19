@@ -60,12 +60,12 @@ public:
 	/**
 	 * Returns the height of the entire Layout
 	 */
-	double getLayoutHeight();
+	int getLayoutHeight();
 
 	/**
 	 * Returns the width of the entire Layout
 	 */
-	double getLayoutWidth();
+	int getLayoutWidth();
 
 	/**
 	 * Returns the Rectangle which is currently visible

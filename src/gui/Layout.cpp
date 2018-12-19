@@ -173,7 +173,7 @@ Rectangle Layout::getVisibleRect()
 /**
  * Returns the height of the entire Layout
  */
-double Layout::getLayoutHeight()
+int Layout::getLayoutHeight()
 {
 	XOJ_CHECK_TYPE(Layout);
 
@@ -183,7 +183,7 @@ double Layout::getLayoutHeight()
 /**
  * Returns the width of the entire Layout
  */
-double Layout::getLayoutWidth()
+int Layout::getLayoutWidth()
 {
 	XOJ_CHECK_TYPE(Layout);
 

@@ -5,6 +5,8 @@
 #include "control/settings/Settings.h"
 #include "control/tools/EditSelection.h"
 #include "control/ToolHandler.h"
+#include "control/ZoomControl.h"
+#include "control/Control.h"
 #include "gui/Cursor.h"
 #include "gui/pageposition/PagePositionHandler.h"
 #include "gui/PageView.h"
@@ -202,6 +204,7 @@ bool InputSequence::actionMoved()
 
 	GtkXournal* xournal = inputHandler->getXournal();
 	ToolHandler* h = inputHandler->getToolHandler();
+	ZoomControl* zoom = inputHandler->getView()->getControl()->getZoomControl();
 
 	changeTool();
 
@@ -210,7 +213,7 @@ bool InputSequence::actionMoved()
 		inputHandler->getView()->penActionDetected();
 	}
 
-	if (xournal->view->zoom_gesture_active)
+	if (zoom->getCurZoomMode() == ZOOM_MODE_GESTURE)
 	{
 		return false;
 	}
@@ -414,10 +417,11 @@ void InputSequence::actionEnd()
 	current_view = NULL;
 
 	GtkXournal* xournal = inputHandler->getXournal();
+	ZoomControl* zoom = inputHandler->getView()->getControl()->getZoomControl();
 	Cursor* cursor = xournal->view->getCursor();
 	ToolHandler* h = inputHandler->getToolHandler();
 
-	if (xournal->view->zoom_gesture_active)
+	if (zoom->getCurZoomMode() == ZOOM_MODE_GESTURE)
 	{
 		stopInput();
 		return;

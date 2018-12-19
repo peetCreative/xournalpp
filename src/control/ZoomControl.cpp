@@ -2,8 +2,7 @@
 
 #include "gui/XournalView.h"
 
-
-const double zoomStep = 0.04;
+#include <cmath>
 
 ZoomListener::~ZoomListener() { }
 
@@ -16,11 +15,13 @@ ZoomControl::ZoomControl()
 	this->lastZoomValue = 1.0;
 	this->zoom100Value = 1.0;
 	this->zoomFitValue = 1.0;
-	this->zoomFitMode = true;
-	this->zoom_center_x = -1;
-	this->zoom_center_y = -1;
-
+	this->curZoomMode = ZOOM_MODE_FIT;
 	this->currentPage = 0;
+	this->zoomCenterX = -1;
+	this->zoomCenterY = -1;
+	this->zoomStep = DEFAULT_ZOOM_STEP;
+	this->zoomMax = DEFAULT_ZOOM_MAX;
+	this->zoomMin = DEFAULT_ZOOM_MIN;
 }
 
 ZoomControl::~ZoomControl()
@@ -52,33 +53,111 @@ void ZoomControl::setCurrentPage(size_t currentPage)
 	this->currentPage = currentPage;
 }
 
+double ZoomControl::getZoomCenterX()
+{
+	XOJ_CHECK_TYPE(ZoomControl);
+
+	return this->zoomCenterX;
+}
+void ZoomControl::setZoomCenterX(double zoomCenterX)
+{
+	XOJ_CHECK_TYPE(ZoomControl);
+
+	this->zoomCenterX = zoomCenterX;
+}
+double ZoomControl::getZoomCenterY()
+{
+	XOJ_CHECK_TYPE(ZoomControl);
+
+	return this->zoomCenterY;
+}
+void ZoomControl::setZoomCenterY(double zoomCenterY)
+{
+	XOJ_CHECK_TYPE(ZoomControl);
+
+	this->zoomCenterY = zoomCenterY;
+}
+double ZoomControl::getZoomStep()
+{
+	return this->zoomStep;
+}
+void ZoomControl::setZoomStep(double zoomStep)
+{
+	XOJ_CHECK_TYPE(ZoomControl);
+
+	this->zoomStep = zoomStep;
+}
+double ZoomControl::getZoomMax()
+{
+	XOJ_CHECK_TYPE(ZoomControl);
+
+	return this->zoomMax;
+}
+void ZoomControl::setZoomMax(double zoomMax)
+{
+	XOJ_CHECK_TYPE(ZoomControl);
+
+	this->zoomMax = zoomMax;
+}
+double ZoomControl::getZoomMin()
+{
+	XOJ_CHECK_TYPE(ZoomControl);
+
+	return this->zoomMin;
+}
+void ZoomControl::setZoomMin(double zoomMin)
+{
+	XOJ_CHECK_TYPE(ZoomControl);
+
+	this->zoomMin = zoomMin;
+}
+
+ZoomModeType ZoomControl::getCurZoomMode()
+{
+	XOJ_CHECK_TYPE(ZoomControl);
+
+	return this->curZoomMode;
+}
+
+void ZoomControl::setCurZoomMode(ZoomModeType curZoomMode)
+{
+	XOJ_CHECK_TYPE(ZoomControl);
+
+	this->curZoomMode = curZoomMode;
+}
+
 void ZoomControl::fireZoomChanged(double lastZoom)
 {
 	XOJ_CHECK_TYPE(ZoomControl);
 
-	if (this->zoom < MIN_ZOOM)
+	if (this->zoom < this->zoomMin)
 	{
-		this->zoom = MIN_ZOOM;
+		this->zoom = this->zoomMin;
 	}
 
-	if (this->zoom > MAX_ZOOM)
+	if (this->zoom > this->zoomMax)
 	{
-		this->zoom = MAX_ZOOM;
+		this->zoom = this->zoomMax;
 	}
 
-	// Store current page
-	size_t page = this->currentPage;
+	if (std::abs(this->zoom - lastZoom) < ZOOM_EPSILON)
+	{
+		this->zoom = lastZoom;
+		return;
+	}
+// 	// Store current page
+// 	size_t page = this->currentPage;
 
 	for (ZoomListener* z : this->listener)
 	{
 		z->zoomChanged(lastZoom);
 	}
 
-	if (view != NULL)
-	{
-		// Restore page
-		view->scrollTo(page, 0);
-	}
+// 	if (view != NULL)
+// 	{
+// 		// Restore page
+// 		view->scrollTo(page, 0);
+// 	}
 }
 
 void ZoomControl::fireZoomRangeValueChanged()
@@ -102,10 +181,12 @@ void ZoomControl::setZoom(double zoom)
 {
 	XOJ_CHECK_TYPE(ZoomControl);
 
-	double lastZoom = this->zoom;
-	this->zoom = zoom;
-	this->zoomFitMode = false;
-	fireZoomChanged(lastZoom);
+	if (this->curZoomMode != ZOOM_MODE_NONE)
+	{
+		double lastZoom = this->zoom;
+		this->zoom = zoom;
+		fireZoomChanged(lastZoom);
+	}
 }
 
 void ZoomControl::setZoom100(double zoom)
@@ -123,7 +204,7 @@ void ZoomControl::setZoomFit(double zoom)
 	this->zoomFitValue = zoom;
 	fireZoomRangeValueChanged();
 
-	if (this->zoomFitMode)
+	if (this->curZoomMode == ZOOM_MODE_FIT)
 	{
 		double lastZoom = this->zoom;
 		this->zoom = this->zoomFitValue;
@@ -149,40 +230,49 @@ void ZoomControl::zoom100()
 {
 	XOJ_CHECK_TYPE(ZoomControl);
 
+	this->curZoomMode = ZOOM_MODE_100;
 	double lastZoom = this->zoom;
 	this->zoom = this->zoom100Value;
-	this->zoomFitMode = false;
 	fireZoomChanged(lastZoom);
+	this->curZoomMode = ZOOM_MODE_NONE;
 }
 
 void ZoomControl::zoomFit()
 {
 	XOJ_CHECK_TYPE(ZoomControl);
 
+	this->curZoomMode = ZOOM_MODE_FIT;
 	double lastZoom = this->zoom;
 	this->zoom = this->zoomFitValue;
-	this->zoomFitMode = true;
 	fireZoomChanged(lastZoom);
 }
 
-void ZoomControl::zoomIn()
+void ZoomControl::zoomIn(bool ctrl_scroll)
 {
 	XOJ_CHECK_TYPE(ZoomControl);
 
+	if (ctrl_scroll)
+		this->curZoomMode = ZOOM_MODE_CTRL_SCROLL;
+	else
+		this->curZoomMode = ZOOM_MODE_OUT_BUTTON;
 	double lastZoom = this->zoom;
-	this->zoom += zoomStep;
-	this->zoomFitMode = false;
+	this->zoom += this->zoomStep;
 	fireZoomChanged(lastZoom);
+	this->curZoomMode = ZOOM_MODE_NONE;
 }
 
-void ZoomControl::zoomOut()
+void ZoomControl::zoomOut(bool ctrl_scroll)
 {
 	XOJ_CHECK_TYPE(ZoomControl);
 
+	if (ctrl_scroll)
+		this->curZoomMode = ZOOM_MODE_CTRL_SCROLL;
+	else
+		this->curZoomMode = ZOOM_MODE_OUT_BUTTON;
 	double lastZoom = this->zoom;
-	this->zoom -= zoomStep;
-	this->zoomFitMode = false;
+	this->zoom -= this->zoomStep;
 	fireZoomChanged(lastZoom);
+	this->curZoomMode = ZOOM_MODE_NONE;
 }
 
 bool ZoomControl::onScrolledwindowMainScrollEvent(GtkWidget* widget, GdkEventScroll* event, ZoomControl* zoom)
@@ -200,16 +290,36 @@ bool ZoomControl::onScrolledwindowMainScrollEvent(GtkWidget* widget, GdkEventScr
 	if (state & GDK_CONTROL_MASK)
 	{
 		//set zoom center (for shift centered scroll)
-		zoom->zoom_center_x = event->x;
-		zoom->zoom_center_y = event->y;
+		zoom->setZoomCenterX(event->x);
+		zoom->setZoomCenterY(event->y);
 
 		if (event->direction == GDK_SCROLL_UP || event->direction == GDK_SCROLL_LEFT)
 		{
-			zoom->zoomIn();
+			zoom->zoomIn(true);
 		}
-		else
+		else if (event->direction == GDK_SCROLL_UP || event->direction == GDK_SCROLL_LEFT)
 		{
-			zoom->zoomOut();
+			zoom->zoomOut(true);
+		}
+		else if (event->direction == GDK_SCROLL_SMOOTH)
+		{
+			gdouble delta_x = 0;
+			gdouble delta_y = 0;
+			if (gdk_event_get_scroll_deltas((GdkEvent*) event, &delta_x, &delta_y) &&
+				(std::abs(delta_x) > ZOOM_EPSILON || std::abs(delta_y) > ZOOM_EPSILON))
+			{
+				zoom->setCurZoomMode(ZOOM_MODE_CTRL_SCROLL);
+				double delta = std::abs(delta_x) > std::abs(delta_y)
+					? delta_x : delta_y;
+				double zoom_step = zoom->getZoomStep();
+				if (std::abs(delta) > zoom_step)
+				{
+					delta = delta > 0 ? zoom_step : -zoom_step;
+				}
+				// Minus delta because scrolling down means srcolling out
+				zoom->setZoom(zoom->getZoom() - delta);
+				zoom->setCurZoomMode(ZOOM_MODE_NONE);
+			}
 		}
 
 		return true;
