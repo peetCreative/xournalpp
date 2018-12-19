@@ -16,6 +16,7 @@
 #include <i18n.h>
 #include <Stacktrace.h>
 
+#include <libintl.h>
 #include <gtk/gtk.h>
 
 #include <boost/algorithm/string/predicate.hpp>
@@ -28,9 +29,6 @@ namespace bf = boost::filesystem;
 #endif
 
 #ifdef __APPLE__
-#undef ENABLE_NLS
-#endif
-#ifdef WIN32
 #undef ENABLE_NLS
 #endif
 
@@ -61,6 +59,12 @@ void XournalMain::initLocalisation()
 	//locale generator
 	boost::locale::generator gen;
 #ifdef ENABLE_NLS
+
+#ifdef WIN32
+#undef PACKAGE_LOCALE_DIR
+#define PACKAGE_LOCALE_DIR "../share/po/"
+#endif
+
 	gen.add_messages_path(PACKAGE_LOCALE_DIR);
 	gen.add_messages_domain(GETTEXT_PACKAGE);
 	
@@ -410,15 +414,27 @@ string XournalMain::findResourcePath(string searchFile)
 
 	// -----------------------------------------------------------------------
 
-	// Check if we are in the "build" directory, and therefore the resources
-	// are installed two folders back
+	// Check one folder back, for windows portable
 	path relative4 = executableDir;
-	relative4 /= "../..";
+	relative4 /= "..";
 	relative4 /= searchFile;
 
 	if (bf::exists(relative4))
 	{
 		return relative4.parent_path().normalize().string();
+	}
+
+	// -----------------------------------------------------------------------
+
+	// Check if we are in the "build" directory, and therefore the resources
+	// are installed two folders back
+	path relative5 = executableDir;
+	relative5 /= "../..";
+	relative5 /= searchFile;
+
+	if (bf::exists(relative5))
+	{
+		return relative5.parent_path().normalize().string();
 	}
 
 	// Not found
