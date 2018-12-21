@@ -206,9 +206,7 @@ void ZoomControl::setZoomFit(double zoom)
 
 	if (this->curZoomMode == ZOOM_MODE_FIT)
 	{
-		double lastZoom = this->zoom;
-		this->zoom = this->zoomFitValue;
-		fireZoomChanged(lastZoom);
+		this->setZoom(this->zoomFitValue);
 	}
 }
 
@@ -231,9 +229,7 @@ void ZoomControl::zoom100()
 	XOJ_CHECK_TYPE(ZoomControl);
 
 	this->curZoomMode = ZOOM_MODE_100;
-	double lastZoom = this->zoom;
-	this->zoom = this->zoom100Value;
-	fireZoomChanged(lastZoom);
+	this->setZoom(this->zoom100Value);
 	this->curZoomMode = ZOOM_MODE_NONE;
 }
 
@@ -242,37 +238,32 @@ void ZoomControl::zoomFit()
 	XOJ_CHECK_TYPE(ZoomControl);
 
 	this->curZoomMode = ZOOM_MODE_FIT;
-	double lastZoom = this->zoom;
-	this->zoom = this->zoomFitValue;
-	fireZoomChanged(lastZoom);
+	this->setZoom(this->zoomFitValue);
 }
 
-void ZoomControl::zoomIn(bool ctrl_scroll)
+void ZoomControl::zoomOneStep(ZoomModeType mode)
 {
 	XOJ_CHECK_TYPE(ZoomControl);
 
-	if (ctrl_scroll)
-		this->curZoomMode = ZOOM_MODE_CTRL_SCROLL;
-	else
-		this->curZoomMode = ZOOM_MODE_OUT_BUTTON;
-	double lastZoom = this->zoom;
-	this->zoom += this->zoomStep;
-	fireZoomChanged(lastZoom);
-	this->curZoomMode = ZOOM_MODE_NONE;
-}
-
-void ZoomControl::zoomOut(bool ctrl_scroll)
-{
-	XOJ_CHECK_TYPE(ZoomControl);
-
-	if (ctrl_scroll)
-		this->curZoomMode = ZOOM_MODE_CTRL_SCROLL;
-	else
-		this->curZoomMode = ZOOM_MODE_OUT_BUTTON;
-	double lastZoom = this->zoom;
-	this->zoom -= this->zoomStep;
-	fireZoomChanged(lastZoom);
-	this->curZoomMode = ZOOM_MODE_NONE;
+	this->setCurZoomMode(mode);
+	switch (mode) {
+		case ZOOM_MODE_IN_STEP:
+			this->setZoom(this->zoom + this->zoomStep);
+			this->setCurZoomMode(ZOOM_MODE_NONE);
+			break;
+		case ZOOM_MODE_OUT_STEP:
+			this->setZoom(this->zoom - this->zoomStep);
+			this->setCurZoomMode(ZOOM_MODE_NONE);
+			break;
+		case ZOOM_MODE_IN_CTRL_SCROLL:
+			this->setZoom(this->zoom + this->zoomStep);
+			break;
+		case ZOOM_MODE_OUT_CTRL_SCROLL:
+			this->setZoom(this->zoom - this->zoomStep);
+			break;
+		default:
+			this->setCurZoomMode(ZOOM_MODE_NONE);
+	}
 }
 
 bool ZoomControl::onScrolledwindowMainScrollEvent(GtkWidget* widget, GdkEventScroll* event, ZoomControl* zoom)
@@ -295,29 +286,39 @@ bool ZoomControl::onScrolledwindowMainScrollEvent(GtkWidget* widget, GdkEventScr
 
 		if (event->direction == GDK_SCROLL_UP || event->direction == GDK_SCROLL_LEFT)
 		{
-			zoom->zoomIn(true);
+			zoom->zoomOneStep(ZOOM_MODE_IN_CTRL_SCROLL);
 		}
 		else if (event->direction == GDK_SCROLL_UP || event->direction == GDK_SCROLL_LEFT)
 		{
-			zoom->zoomOut(true);
+			zoom->zoomOneStep(ZOOM_MODE_OUT_CTRL_SCROLL);
 		}
 		else if (event->direction == GDK_SCROLL_SMOOTH)
 		{
 			gdouble delta_x = 0;
 			gdouble delta_y = 0;
 			if (gdk_event_get_scroll_deltas((GdkEvent*) event, &delta_x, &delta_y) &&
-				(std::abs(delta_x) > ZOOM_EPSILON || std::abs(delta_y) > ZOOM_EPSILON))
+				(std::abs(delta_y) > ZOOM_EPSILON))
 			{
-				zoom->setCurZoomMode(ZOOM_MODE_CTRL_SCROLL);
-				double delta = std::abs(delta_x) > std::abs(delta_y)
-					? delta_x : delta_y;
+				ZoomModeType mode;
+				if (delta_y > 0)
+					mode = ZOOM_MODE_IN_CTRL_SCROLL;
+				else
+					mode = ZOOM_MODE_OUT_CTRL_SCROLL;
 				double zoom_step = zoom->getZoomStep();
-				if (std::abs(delta) > zoom_step)
+				if (std::abs(delta_y) > zoom_step)
 				{
-					delta = delta > 0 ? zoom_step : -zoom_step;
+					zoom->zoomOneStep(mode);
 				}
-				// Minus delta because scrolling down means srcolling out
-				zoom->setZoom(zoom->getZoom() - delta);
+				else
+				{
+					zoom->setCurZoomMode(mode);
+					// Minus delta because scrolling down means srcolling out
+					zoom->setZoom(zoom->getZoom() - delta_y);
+				}
+			}
+			// I think at the end is_stop gets one maybe we can use this for when to redraw
+			if (event->is_stop == 1)
+			{
 				zoom->setCurZoomMode(ZOOM_MODE_NONE);
 			}
 		}

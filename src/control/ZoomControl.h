@@ -18,9 +18,9 @@
 
 #define DEFAULT_ZOOM_MAX 5
 #define DEFAULT_ZOOM_MIN 0.3
-#define DEFAULT_ZOOM_STEP 0.05
+#define DEFAULT_ZOOM_STEP 0.1
 #define MIN_ZOOM_STEP 0.05
-#define ZOOM_EPSILON 0.0001
+#define ZOOM_EPSILON 0.001
 
 class XournalView;
 
@@ -28,10 +28,11 @@ enum ZoomModeType
 {
 	ZOOM_MODE_NONE,
 	ZOOM_MODE_GESTURE,
-	ZOOM_MODE_IN_BUTTON,
-	ZOOM_MODE_OUT_BUTTON,
+	ZOOM_MODE_IN_STEP,
+	ZOOM_MODE_OUT_STEP,
+	ZOOM_MODE_IN_CTRL_SCROLL,
+	ZOOM_MODE_OUT_CTRL_SCROLL,
 	ZOOM_MODE_SLIDER,
-	ZOOM_MODE_CTRL_SCROLL,
 	ZOOM_MODE_FIT,
 	ZOOM_MODE_100,
 	ZOOM_MODE_INIT
@@ -53,13 +54,13 @@ public:
 	ZoomControl();
 	virtual ~ZoomControl();
 
-	void zoomIn(bool ctrl_scroll);
-	void zoomOut(bool ctrl_scroll);
+	void zoomOneStep(ZoomModeType);
 
 	void zoomFit();
 	void zoom100();
 
 	double getZoom();
+	//curZoomMode needs to be set before and after
 	void setZoom(double zoom);
 
 	void setZoom100(double zoom);

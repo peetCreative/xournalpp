@@ -687,13 +687,14 @@ void XournalView::zoomChanged(double lastZoom)
 			}
 			break;
 		case ZOOM_MODE_SLIDER:
-		case ZOOM_MODE_IN_BUTTON:
-		case ZOOM_MODE_OUT_BUTTON:
+		case ZOOM_MODE_IN_STEP:
+		case ZOOM_MODE_OUT_STEP:
 			layout->scrollAbs(
 				std::round(scroll_percentage_x_last * layout->getLayoutWidth()),
 				std::round(scroll_percentage_y_last * layout->getLayoutHeight()));
 			break;
-		case ZOOM_MODE_CTRL_SCROLL:
+		case ZOOM_MODE_IN_CTRL_SCROLL:
+		case ZOOM_MODE_OUT_CTRL_SCROLL:
 			if (zoom_center_x != -1 && zoom_center_y != -1) {
 				int scroll_x = std::round((zoom_center_x - marginLeft) *
 					(zoom_eff - 1));

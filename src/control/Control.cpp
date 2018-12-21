@@ -1550,10 +1550,10 @@ void Control::zoomCallback(ActionType type)
 		zoomFit();
 		break;
 	case ACTION_ZOOM_IN:
-		zoom->zoomIn(false);
+		zoom->zoomOneStep(ZOOM_MODE_IN_STEP);
 		break;
 	case ACTION_ZOOM_OUT:
-		zoom->zoomOut(false);
+		zoom->zoomOneStep(ZOOM_MODE_OUT_STEP);
 		break;
 	default:
 		break;
