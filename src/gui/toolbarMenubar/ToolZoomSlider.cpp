@@ -179,9 +179,14 @@ GtkToolItem* ToolZoomSlider::newItem()
 
 	if (this->slider)
 	{
-		g_signal_handlers_disconnect_by_func(this->slider, (void* )(sliderChanged), this);
-		g_signal_handlers_disconnect_by_func(this->slider, (void* )(sliderButtonPress), this);
-		g_signal_handlers_disconnect_by_func(this->slider, (void* )(sliderButtonRelease), this);
+		g_signal_handlers_disconnect_by_func(
+			this->slider, (void* )(sliderChanged), this);
+		g_signal_handlers_disconnect_by_func(
+			this->slider, (void* )(sliderButtonPress), this);
+		g_signal_handlers_disconnect_by_func(
+			this->slider, (void* )(sliderButtonRelease), this);
+		g_signal_handlers_disconnect_by_func(
+			this->slider, (void* )(sliderFormatValue), this);
 	}
 
 	double slider_min = scaleFunc(DEFAULT_ZOOM_MIN);
@@ -205,10 +210,14 @@ GtkToolItem* ToolZoomSlider::newItem()
 		gtk_range_set_inverted(GTK_RANGE(this->slider), true);
 	}
 
-	g_signal_connect(this->slider, "value-changed", G_CALLBACK(sliderChanged), this);
-	g_signal_connect(this->slider, "button-press-event", G_CALLBACK(sliderButtonPress), this);
-	g_signal_connect(this->slider, "button-release-event", G_CALLBACK(sliderButtonRelease), this);
-	g_signal_connect(this->slider, "format-value", G_CALLBACK(sliderFormatValue), this);
+	g_signal_connect(this->slider, "value-changed",
+					 G_CALLBACK(sliderChanged), this);
+	g_signal_connect(this->slider, "button-press-event",
+					 G_CALLBACK(sliderButtonPress), this);
+	g_signal_connect(this->slider, "button-release-event",
+					 G_CALLBACK(sliderButtonRelease), this);
+	g_signal_connect(this->slider, "format-value",
+					 G_CALLBACK(sliderFormatValue), this);
 	gtk_scale_set_draw_value(GTK_SCALE(this->slider), true);
 
 	if (this->horizontal)
